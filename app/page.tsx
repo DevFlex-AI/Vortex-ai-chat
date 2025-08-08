@@ -74,85 +74,6 @@ const ModelSelect = dynamic(() => import('@/components/ModelSelect'))
 const TalkWithVoice = dynamic(() => import('@/components/TalkWithVoice'))
 const MultimodalLive = dynamic(() => import('@/components/MultimodalLive'))
 
-const COLOR_PALETTE = [
-  '#000000', '#808080', '#C0C0C0', '#FFFFFF', '#FF0000', '#FFA500', '#FFFF00', '#00FF00', '#00FFFF', '#0000FF', '#FF00FF',
-  '#800000', '#808000', '#008000', '#008080', '#000080', '#800080', '#A52A2A', '#FFD700', '#ADFF2F', '#20B2AA', '#87CEEB', '#FF69B4'
-]
-
-function ThemeColorDropdown() {
-  const [open, setOpen] = useState(false)
-  const [themeColor, setThemeColor] = useState('#1e3a8a')
-  const dropdownRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    document.documentElement.style.setProperty('--theme-color', themeColor)
-  }, [themeColor])
-
-  // Close dropdown on outside click
-  useEffect(() => {
-    function handleClick(e: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
-        setOpen(false)
-      }
-    }
-    if (open) document.addEventListener('mousedown', handleClick)
-    return () => document.removeEventListener('mousedown', handleClick)
-  }, [open])
-
-  return (
-    <div style={{ position: 'relative', display: 'inline-block' }} ref={dropdownRef}>
-      <button
-        className="h-8 w-8 rounded-full border border-gray-300"
-        style={{ background: themeColor }}
-        title="Change theme color"
-        onClick={() => setOpen(v => !v)}
-      />
-      {open && (
-        <div
-          style={{
-            position: 'absolute',
-            top: '110%',
-            left: 0,
-            zIndex: 100,
-            background: '#fff',
-            border: '1px solid #eee',
-            borderRadius: 8,
-            padding: 8,
-            boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-            minWidth: 180,
-          }}
-        >
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-            {COLOR_PALETTE.map(color => (
-              <button
-                key={color}
-                onClick={() => { setThemeColor(color); setOpen(false); }}
-                style={{
-                  width: 24,
-                  height: 24,
-                  borderRadius: '50%',
-                  border: themeColor === color ? '2px solid #222' : '1px solid #ccc',
-                  background: color,
-                  cursor: 'pointer',
-                }}
-                aria-label={color}
-              />
-            ))}
-            <label style={{ width: 24, height: 24, borderRadius: '50%', border: '1px dashed #ccc', cursor: 'pointer', display: 'inline-block', textAlign: 'center', lineHeight: '24px' }}>
-              +
-              <input
-                type="color"
-                style={{ display: 'none' }}
-                onChange={e => { setThemeColor(e.target.value); setOpen(false); }}
-              />
-            </label>
-          </div>
-        </div>
-      )}
-    </div>
-  )
-}
-
 export default function Home() {
   const { t } = useTranslation()
   const { toast } = useToast()
@@ -186,7 +107,7 @@ export default function Home() {
   const [executingPlugins, setExecutingPlugins] = useState<string[]>([])
   const [enablePlugin, setEnablePlugin] = useState<boolean>(true)
   const [talkMode, setTalkMode] = useState<'chat' | 'voice'>('chat')
-  const conversationTitle = useMemo(() => (title ? title : t('Ask Anything')), [title, t])
+  const conversationTitle = useMemo(() => (title ? title : t('chatAnything')), [title, t])
   const [status, setStatus] = useState<'thinkng' | 'silence' | 'talking'>('silence')
   const canUseMultimodalLive = useMemo(() => {
     return model.startsWith('gemini-2.0-flash-exp') && !model.includes('image')
@@ -493,7 +414,7 @@ export default function Home() {
             message.parts = [...message.parts, ...imageList]
           }
           if (groundingSearch) message.groundingMetadata = groundingSearch
-          addMessage(message)
+          if (message.parts.length > 0) addMessage(message)
           setMessage('')
           setThinkingMessage('')
           clearReference()
@@ -1050,7 +971,7 @@ export default function Home() {
   return (
     <main className="mx-auto flex h-screen max-h-[-webkit-fill-available] w-full max-w-screen-lg flex-col justify-between overflow-hidden max-lg:max-w-screen-md">
       <div className="flex w-full justify-between px-4 pb-2 pr-2 pt-10 max-md:pt-4 max-sm:pr-2 max-sm:pt-4">
-        <div className="flex items-center text-blue-400">
+        <div className="flex items-center text-red-400">
           <div>
             <MessageCircleHeart className="h-10 w-10 max-sm:h-8 max-sm:w-8" />
           </div>
@@ -1063,7 +984,7 @@ export default function Home() {
           </div>
         </div>
         <div className="flex w-32 items-center gap-1 max-sm:gap-0">
-          <a href="https://github.com/vortex-ai-chat/vortex-ai-core" target="_blank">
+          <a href="https://github.com/u14app/gemini-next-chat" target="_blank">
             <Button className="h-8 w-8" title={t('github')} variant="ghost" size="icon">
               <Github className="h-5 w-5" />
             </Button>
@@ -1204,22 +1125,7 @@ export default function Home() {
                 setTextareaHeight(ev.target.value === '' ? TEXTAREA_DEFAULT_HEIGHT : ev.target.scrollHeight)
                 if (messages.length > 1) scrollToBottom()
               }}
-              onKeyDown={ev => {
-              
-                if (
-                  ev.key === 'Enter' &&
-                  !ev.shiftKey && 
-                  (ev.metaKey || ev.ctrlKey || ev.altKey || ev.key === 'Enter')
-                ) {
-                  ev.preventDefault()
-                  handleSubmit(content)
-                }
-                
-                 if (ev.key === 'Enter' && !ev.shiftKey) {
-                   ev.preventDefault()
-                   handleSubmit(content)
-                 }  
-              }}
+              onKeyDown={handleKeyDown}
             />
             <div className="absolute bottom-0.5 right-1 flex max-sm:bottom-0">
               {supportAttachment ? (
@@ -1250,7 +1156,7 @@ export default function Home() {
                     <TooltipContent
                       className={cn(
                         'mb-1 px-2 py-1 text-center',
-                        isUndefined(audioRecordRef.current?.isRecording) ? '' : 'font-mono text-blue-500',
+                        isUndefined(audioRecordRef.current?.isRecording) ? '' : 'font-mono text-red-500',
                       )}
                     >
                       {isUndefined(audioRecordRef.current?.isRecording) ? t('startRecording') : formatTime(recordTime)}
