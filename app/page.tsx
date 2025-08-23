@@ -1245,6 +1245,52 @@ export default function Home() {
         )
       ) : null}
       <Setting open={settingOpen} hiddenTalkPanel={!supportSpeechRecognition} onClose={() => setSetingOpen(false)} />
+      
+      {/* Accessibility Controls */}
+      <div className="fixed bottom-4 left-4 z-40">
+        <AccessibilityControls
+          settings={accessibilitySettings}
+          onSettingsChange={(newSettings) => 
+            setAccessibilitySettings(prev => ({ ...prev, ...newSettings }))
+          }
+        />
+      </div>
     </main>
+  )
+
+  // Render based on view mode
+  if (viewMode === 'tabbed') {
+    return (
+      <TabbedInterface>
+        {mainChatInterface}
+      </TabbedInterface>
+    )
+  }
+
+  if (viewMode === 'split') {
+    return (
+      <SideBySideView
+        leftPanel={mainChatInterface}
+        rightPanel={
+          <div className="h-full p-4 space-y-4">
+            <MarkdownPreview
+              value={content}
+              onChange={setContent}
+              placeholder="Enter markdown content..."
+            />
+            {artifacts.length > 0 && (
+              <ArtifactsSupport
+                artifacts={artifacts}
+                onArtifactUpdate={handleArtifactUpdate}
+                onArtifactDelete={handleArtifactDelete}
+              />
+            )}
+          </div>
+        }
+      />
+    )
+  }
+
+  return mainChatInterface
   )
 }
