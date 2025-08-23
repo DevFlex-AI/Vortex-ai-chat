@@ -4,6 +4,7 @@ import { Toaster } from '@/components/ui/toaster'
 import ThemeProvider from '@/components/ThemeProvider'
 import StoreProvider from '@/components/StoreProvider'
 import I18Provider from '@/components/I18nProvider'
+import AuthWrapper from '@/components/auth/AuthWrapper'
 import { SidebarProvider } from '@/components/ui/sidebar'
 import AppSidebar from '@/components/AppSidebar'
 
@@ -77,10 +78,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           <StoreProvider>
             <I18Provider>
-              <SidebarProvider defaultOpen>
-                <AppSidebar />
-                {children}
-              </SidebarProvider>
+              <AuthWrapper>
+                <SidebarProvider defaultOpen>
+                  <AppSidebar />
+                  {children}
+                </SidebarProvider>
+              </AuthWrapper>
             </I18Provider>
           </StoreProvider>
         </ThemeProvider>

@@ -1,5 +1,6 @@
 'use client'
 import dynamic from 'next/dynamic'
+import { useUser } from '@clerk/nextjs'
 import { useRef, useState, useMemo, KeyboardEvent, useEffect, useCallback, useLayoutEffect } from 'react'
 import type { FunctionCall, InlineDataPart } from '@xiangfa/generative-ai'
 import { AudioRecorder, EdgeSpeech, getRecordMineType } from '@xiangfa/polly'
@@ -73,8 +74,19 @@ const PluginList = dynamic(() => import('@/components/PluginList'))
 const ModelSelect = dynamic(() => import('@/components/ModelSelect'))
 const TalkWithVoice = dynamic(() => import('@/components/TalkWithVoice'))
 const MultimodalLive = dynamic(() => import('@/components/MultimodalLive'))
+const TabbedInterface = dynamic(() => import('@/components/chat/TabbedInterface'))
+const SideBySideView = dynamic(() => import('@/components/chat/SideBySideView'))
+const DragDropUpload = dynamic(() => import('@/components/chat/DragDropUpload'))
+const RichFileParser = dynamic(() => import('@/components/chat/RichFileParser'))
+const MarkdownPreview = dynamic(() => import('@/components/chat/MarkdownPreview'))
+const ChainOfThoughtVisualization = dynamic(() => import('@/components/chat/ChainOfThoughtVisualization'))
+const BranchingConversations = dynamic(() => import('@/components/chat/BranchingConversations'))
+const ArtifactsSupport = dynamic(() => import('@/components/chat/ArtifactsSupport'))
+const MultiProviderChat = dynamic(() => import('@/components/providers/MultiProviderChat'))
+const AccessibilityControls = dynamic(() => import('@/components/accessibility/AccessibilityControls'))
 
 export default function Home() {
+  const { user } = useUser()
   const { t } = useTranslation()
   const { toast } = useToast()
   const { state: sidebarState, toggleSidebar } = useSidebar()
@@ -107,6 +119,20 @@ export default function Home() {
   const [executingPlugins, setExecutingPlugins] = useState<string[]>([])
   const [enablePlugin, setEnablePlugin] = useState<boolean>(true)
   const [talkMode, setTalkMode] = useState<'chat' | 'voice'>('chat')
+  const [viewMode, setViewMode] = useState<'single' | 'split' | 'tabbed'>('single')
+  const [selectedProvider, setSelectedProvider] = useState('gemini')
+  const [artifacts, setArtifacts] = useState<any[]>([])
+  const [thoughtSteps, setThoughtSteps] = useState<any[]>([])
+  const [accessibilitySettings, setAccessibilitySettings] = useState({
+    fontSize: 100,
+    highContrast: false,
+    reducedMotion: false,
+    screenReaderMode: false,
+    voiceSpeed: 1.0,
+    colorBlindMode: 'none' as const,
+    focusIndicator: false,
+    keyboardNavigation: false,
+  })
   const conversationTitle = useMemo(() => (title ? title : t('chatAnything')), [title, t])
   const [status, setStatus] = useState<'thinkng' | 'silence' | 'talking'>('silence')
   const canUseMultimodalLive = useMemo(() => {
